@@ -174,6 +174,15 @@ const uint8_t APBPrescTable[8U] =  {0, 0, 0, 0, 1, 2, 3, 4};
   */
 void SystemInit (void)
 {
+    // ====== 调试点灯：PB1 点亮（不依赖 HAL 库） ======
+    // 使能 GPIOB 时钟
+    *(volatile unsigned int*)0x40021018 |= (1 << 3);
+    // 配置 PB1 为推挽输出
+    *(volatile unsigned int*)0x40010C00 &= ~(0xF << 4);
+    *(volatile unsigned int*)0x40010C00 |= (0x3 << 4);
+    // 点亮 LED（PB1 拉低）
+    *(volatile unsigned int*)0x40010C14 = (1 << 1);
+
 #if defined(STM32F100xE) || defined(STM32F101xE) || defined(STM32F101xG) || defined(STM32F103xE) || defined(STM32F103xG)
   #ifdef DATA_IN_ExtSRAM
     SystemInit_ExtMemCtl(); 

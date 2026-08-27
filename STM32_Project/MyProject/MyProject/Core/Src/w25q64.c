@@ -33,18 +33,20 @@ void W25Q64_WaitBusy(void)
 
 void W25Q64_Init(void)
 {
+    // ====== 替换 HAL_Delay(10) 为简单循环延时 ======
+    for (volatile uint32_t i = 0; i < 10 * 6000; i++);   // 约 10ms (假设 72MHz)
+
     W25Q64_CS_HIGH();
-    HAL_Delay(10);
-    
+
     uint16_t id = W25Q64_ReadID();
     printf("W25Q64 ID: 0x%04X\r\n", id);
-    
+
     if (id == 0xEF16 || id == 0xEF40) {  // 兼容不同批次
         printf("W25Q64 detected!\r\n");
     } else {
         printf("W25Q64 not detected! ID=0x%04X\r\n", id);
     }
-    
+
     Cache_Init();
 }
 

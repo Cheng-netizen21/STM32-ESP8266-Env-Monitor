@@ -32,6 +32,7 @@ typedef struct {
     uint8_t humi_dec;
     uint16_t light;
     int smoke_level;
+    uint16_t smoke_raw;   // 新增：烟雾原始ADC值
 } SensorData_t;
 
 // 网络状态枚举
@@ -170,14 +171,19 @@ void StartSensorTask(void *argument)
     uint16_t smoke_raw = 0;
     int smoke_level = 0;
 
+    // ====== 预热传感器（5秒） ======
+    printf("Warming up sensors...\r\n");
+    osDelay(5000);   // 使用 FreeRTOS 延时
+
     for(;;)
     {
         tickCount = osKernelGetTickCount();
         sensorData.light = AD_GetValue();
         
         smoke_raw = AD_GetSmoke();
+        sensorData.smoke_raw = smoke_raw;   // 存储原始值
         
-        if (smoke_raw <= 500) {
+        if (smoke_raw <= 200) {
             smoke_level = 0;
         } else if (smoke_raw <= 1500) {
             smoke_level = 1;
@@ -195,10 +201,10 @@ void StartSensorTask(void *argument)
             putReport  = osMessageQueuePut(reportQueueHandle, &sensorData, 0, 100);
 
             if (putDisplay == osOK && putReport == osOK) {
-                printf("Sensor: put OK, temp=%d.%d, humi=%d.%d, light=%d, smoke=%d(%d)\r\n",
+                printf("Sensor: put OK, temp=%d.%d, humi=%d.%d, light=%d, smoke=%d\r\n",
                        sensorData.temp_int, sensorData.temp_dec,
                        sensorData.humi_int, sensorData.humi_dec,
-                       sensorData.light, smoke_level, smoke_raw);
+                       sensorData.light, smoke_raw);
             } else {
                 printf("Sensor: queue put error (display=%d, report=%d)\r\n", putDisplay, putReport);
             }
@@ -253,15 +259,10 @@ void StartDisplayTask(void *argument)
             sprintf(buf, "%4d", sensorData.light);
             OLED_ShowString(3, 7, buf);
 
+            // ====== 修改烟雾显示为原始值 ======
             OLED_ShowString(4, 1, "Smoke:");
-            OLED_ShowNum(4, 7, sensorData.smoke_level, 1);
-            if (sensorData.smoke_level == 0) {
-                OLED_ShowString(4, 9, "N");
-            } else if (sensorData.smoke_level == 1) {
-                OLED_ShowString(4, 9, "W");
-            } else {
-                OLED_ShowString(4, 9, "A");
-            }
+            OLED_ShowNum(4, 7, sensorData.smoke_raw, 4);   // 显示原始ADC值
+            // 不再显示等级字母
         }
         osDelay(50);
     }

@@ -91,6 +91,12 @@ void IWDG_Feed(void)
 {
     IWDG->KR = 0xAAAA;
 }
+
+// ====== 自定义简单延时（替代 HAL_Delay） ======
+static void delay_ms_simple(uint32_t ms)
+{
+    for (volatile uint32_t i = 0; i < ms * 6000; i++);
+}
 /* USER CODE END 0 */
 
 /**
@@ -99,7 +105,7 @@ void IWDG_Feed(void)
   */
 int main(void)
 {
-
+  SCB->VTOR = 0x08003000;  //向量表迁移
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -127,7 +133,7 @@ int main(void)
   MX_SPI1_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  HAL_Delay(1000);
+  delay_ms_simple(1000);   // 替换 HAL_Delay(1000)
   OLED_Init();
   AD_Init();
   DHT11_Init();
@@ -210,23 +216,19 @@ void SystemClock_Config(void)
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
   RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
-  /** Initializes the RCC Oscillators according to the specified parameters
-  * in the RCC_OscInitTypeDef structure.
-  */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-  RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
+  /** 使用 HSI（内部8MHz）作为时钟源，不依赖外部晶振 */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI_DIV2;  // HSI/2 = 4MHz
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL16;              // 4MHz * 16 = 64MHz
+
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
   }
 
-  /** Initializes the CPU, AHB and APB buses clocks
-  */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
@@ -238,6 +240,8 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+
+  /* ADC 时钟配置 */
   PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
   PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV6;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
