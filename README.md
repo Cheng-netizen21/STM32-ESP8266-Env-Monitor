@@ -1,8 +1,3 @@
-好的，我在原有 README 的基础上增加了 **“🔧 OTA 远程升级机制”** 章节，详细介绍 STM32 + ESP8266 双 MCU 的 OTA 流程，包括 IAP 启动、握手协议、固件传输和断网续传等，并更新了亮点说明。以下是完整的 README.md 文件：
-
----
-
-```markdown
 # 基于 STM32 与 ESP8266 的物联网环境监测终端
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
