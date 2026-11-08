@@ -89,8 +89,6 @@
 
 ## 📐 软件架构图
 
-> 详见 `docs/architecture.png`
-
 
 ┌─────────────────────────────────────────────────────┐
 │                   Application Layer                 │
@@ -220,6 +218,3 @@ STM32-ESP8266-Env-Monitor/
 程文轩 - 2304112432@qq.com
 
 **项目链接**：[https://github.com/Cheng-netizen21/STM32-ESP8266-Env-Monitor](https://github.com/Cheng-netizen21/STM32-ESP8266-Env-Monitor)
-• 要求：不用剪辑，不用配乐，画面清楚就行，存进手机相册备用。
-
-视频存好备用后告诉我，我们接着推进找工作的下一步！
